@@ -1,6 +1,6 @@
 # Student Marks & Grade Prediction Web App 🎓
 
-[![CI/CD Pipeline](https://github.com/OWNER/student-grade-prediction-app/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/OWNER/student-grade-prediction-app/actions/workflows/ci-cd.yml)
+[![CI/CD Pipeline](https://github.com/magdumdurva-glitch/gradeprediction/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/magdumdurva-glitch/gradeprediction/actions/workflows/ci-cd.yml)
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.14-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Framework-Flask%203.1-black.svg)](https://flask.palletsprojects.com/)
 [![Docker](https://img.shields.io/badge/Container-Docker-2496ED.svg)](https://www.docker.com/)
@@ -66,8 +66,8 @@ student-grade-prediction-app/
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/<YOUR_USERNAME>/student-grade-prediction-app.git
-cd student-grade-prediction-app
+git clone https://github.com/magdumdurva-glitch/gradeprediction.git
+cd gradeprediction
 ```
 
 ### 2. Create and activate a virtual environment
