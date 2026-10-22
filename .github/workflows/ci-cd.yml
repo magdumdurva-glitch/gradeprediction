@@ -87,26 +87,26 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Build Docker Image
         run: |
           echo "Building Docker Image for Student Grade Prediction App..."
-          docker build -t student-grade-prediction:latest -t student-grade-prediction:${{ github.sha }} .
+          docker build -t student-grade-prediction:latest .
 
       - name: Run Container & Test Health Endpoint
         run: |
           echo "Starting Docker Container in detached mode..."
           docker run -d -p 5000:5000 --name grade-app student-grade-prediction:latest
           
-          echo "Waiting 5 seconds for application startup..."
-          sleep 5
+          echo "Waiting 6 seconds for container service startup..."
+          sleep 6
 
-          echo "Testing Application Health Endpoint inside Container..."
-          curl --fail http://localhost:5000/api/health || (echo "Container health check failed!" && exit 1)
+          echo "Inspecting running containers..."
+          docker ps -a
 
-          echo "Testing Sample Prediction API via Docker Container..."
+          echo "Testing Application Health Endpoint..."
+          curl --fail http://localhost:5000/api/health || (docker logs grade-app && exit 1)
+
+          echo "Testing Prediction API via Container..."
           curl -X POST http://localhost:5000/api/predict \
             -H "Content-Type: application/json" \
             -d '{"hours": 20, "attendance": 85}'

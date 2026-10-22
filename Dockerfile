@@ -9,9 +9,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Set container working directory
 WORKDIR /app
 
-# Install curl for container health check and clean up apt cache
+# Install curl and libgomp1 (required for scikit-learn OpenMP support on Debian slim)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements file first to optimize Docker layer caching
@@ -23,9 +24,6 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # Copy project files into container
 COPY . /app/
-
-# Train or verify model artifact existence inside the container
-RUN python model.py
 
 # Create a dedicated non-root user for security best practices
 RUN useradd -m appuser && chown -R appuser:appuser /app
