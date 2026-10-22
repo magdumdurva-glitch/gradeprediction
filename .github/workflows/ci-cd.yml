@@ -63,8 +63,10 @@ jobs:
           pip install -r requirements.txt
 
       - name: Execute Pytest Suite
+        env:
+          PYTHONPATH: .
         run: |
-          pytest tests/ -v --junitxml=pytest-report.xml
+          python -m pytest tests/ -v --junitxml=pytest-report.xml
 
       - name: Upload Test Report Artifact
         if: always()
@@ -114,23 +116,17 @@ jobs:
 
       # Optional: Push to Docker Hub if credentials are provided in GitHub Secrets
       - name: Log in to Docker Hub (Optional)
-        if: env.DOCKERHUB_USERNAME != '' && env.DOCKERHUB_TOKEN != ''
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Push Image to Docker Hub (Optional)
-        if: env.DOCKERHUB_USERNAME != '' && env.DOCKERHUB_TOKEN != ''
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
         run: |
           docker tag student-grade-prediction:latest ${{ secrets.DOCKERHUB_USERNAME }}/student-grade-prediction:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/student-grade-prediction:latest
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Deployment Success Notification
         run: |

@@ -6,6 +6,12 @@ Covers:
 - ML Prediction & Boundary Logic Testing
 """
 
+import os
+import sys
+
+# Ensure root directory is in sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import pytest
 from app import create_app
 from model import calculate_grade, predict_score_and_grade
