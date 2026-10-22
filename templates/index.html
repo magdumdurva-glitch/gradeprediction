@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Marks & Grade Prediction System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="page-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="badge-tag">DevOps Assignment 2 &bull; ML CI/CD Pipeline</div>
+            <h1>Student Marks &amp; Grade Predictor</h1>
+            <p class="subtitle">Linear Regression-based Performance Prediction Engine</p>
+        </header>
+
+        <main class="main-card">
+            <!-- Alert / Error message -->
+            {% if error %}
+            <div class="alert alert-error">
+                <span class="alert-icon">&#9888;</span>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+
+            <!-- Form -->
+            <form action="/predict" method="POST" class="predict-form">
+                <div class="form-group">
+                    <label for="hours">
+                        Weekly Study Hours:
+                        <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="number" 
+                        step="0.5" 
+                        min="0" 
+                        max="70" 
+                        id="hours" 
+                        name="hours" 
+                        value="{{ hours if hours is not none else '' }}" 
+                        placeholder="e.g. 20.0" 
+                        required
+                    >
+                    <small class="helper-text">Enter realistic weekly self-study hours (0 - 70 hrs).</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="attendance">
+                        Attendance Percentage (%):
+                        <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="number" 
+                        step="0.1" 
+                        min="0" 
+                        max="100" 
+                        id="attendance" 
+                        name="attendance" 
+                        value="{{ attendance if attendance is not none else '' }}" 
+                        placeholder="e.g. 85.0" 
+                        required
+                    >
+                    <small class="helper-text">Enter overall class attendance (0 - 100%).</small>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <span>Predict Marks &amp; Grade</span> &rarr;
+                </button>
+            </form>
+
+            <!-- Results Section -->
+            {% if result %}
+            <div class="result-container">
+                <div class="result-header">
+                    <h3>Prediction Results</h3>
+                    <span class="grade-badge grade-{{ result.grade | lower | replace('+', '-plus') }}">
+                        Grade: {{ result.grade }}
+                    </span>
+                </div>
+
+                <div class="score-display">
+                    <div class="score-number">{{ result.predicted_marks }} <span class="score-max">/ 100</span></div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: {{ result.predicted_marks }}%;"></div>
+                    </div>
+                </div>
+
+                <div class="result-details">
+                    <p class="remarks"><strong>Academic Remark:</strong> {{ result.remarks }}</p>
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <span class="metric-label">Input Study Hours</span>
+                            <span class="metric-val">{{ result.hours }} hrs/week</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Input Attendance</span>
+                            <span class="metric-val">{{ result.attendance }}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p><strong>A. P. Shah Institute of Technology</strong> &bull; Dept. of Computer Science &amp; Engineering (AI &amp; ML)</p>
+            <p class="footer-meta">Agile Software Development DevOps &bull; CI/CD with Docker &amp; GitHub Actions</p>
+        </footer>
+    </div>
+</body>
+</html>

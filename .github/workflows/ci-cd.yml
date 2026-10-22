@@ -1,0 +1,141 @@
+name: CI/CD Pipeline - Student Grade Prediction
+
+# Trigger pipeline on push or pull request to main/master branches
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+jobs:
+  # ==========================================================
+  # STAGE 1: BUILD STAGE
+  # ==========================================================
+  build:
+    name: Build & Dependency Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Upgrade pip and Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compile Python Files (Syntax Verification)
+        run: |
+          python -m compileall .
+
+      - name: Train / Verify Model Artifact Generation
+        run: |
+          python model.py
+
+  # ==========================================================
+  # STAGE 2: TEST STAGE
+  # ==========================================================
+  test:
+    name: Run Unit Tests (Pytest)
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Execute Pytest Suite
+        run: |
+          pytest tests/ -v --junitxml=pytest-report.xml
+
+      - name: Upload Test Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: pytest-report.xml
+
+  # ==========================================================
+  # STAGE 3: DEPLOY STAGE
+  # ==========================================================
+  deploy:
+    name: Docker Build & Container Deployment
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
+        run: |
+          echo "Building Docker Image for Student Grade Prediction App..."
+          docker build -t student-grade-prediction:latest -t student-grade-prediction:${{ github.sha }} .
+
+      - name: Run Container & Test Health Endpoint
+        run: |
+          echo "Starting Docker Container in detached mode..."
+          docker run -d -p 5000:5000 --name grade-app student-grade-prediction:latest
+          
+          echo "Waiting 5 seconds for application startup..."
+          sleep 5
+
+          echo "Testing Application Health Endpoint inside Container..."
+          curl --fail http://localhost:5000/api/health || (echo "Container health check failed!" && exit 1)
+
+          echo "Testing Sample Prediction API via Docker Container..."
+          curl -X POST http://localhost:5000/api/predict \
+            -H "Content-Type: application/json" \
+            -d '{"hours": 20, "attendance": 85}'
+
+          echo "Container verified successfully! Stopping test container..."
+          docker stop grade-app
+
+      # Optional: Push to Docker Hub if credentials are provided in GitHub Secrets
+      - name: Log in to Docker Hub (Optional)
+        if: env.DOCKERHUB_USERNAME != '' && env.DOCKERHUB_TOKEN != ''
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push Image to Docker Hub (Optional)
+        if: env.DOCKERHUB_USERNAME != '' && env.DOCKERHUB_TOKEN != ''
+        run: |
+          docker tag student-grade-prediction:latest ${{ secrets.DOCKERHUB_USERNAME }}/student-grade-prediction:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/student-grade-prediction:latest
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Deployment Success Notification
+        run: |
+          echo "=========================================================="
+          echo "CI/CD Pipeline Completed Successfully!"
+          echo "Stages Executed: Build -> Test -> Deploy"
+          echo "Application Docker image successfully built & verified."
+          echo "=========================================================="
